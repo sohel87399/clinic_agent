@@ -1,6 +1,6 @@
 # Closira AI Agent — Bloom Aesthetics Clinic
 
-> **Live Demo → [https://clinic-agent.vercel.app](https://clinic-agent.vercel.app)**
+> **Live Demo → [https://clinic-agent-6pj3d7nqd-sohels-projects-ef12fbd0.vercel.app](https://clinic-agent-6pj3d7nqd-sohels-projects-ef12fbd0.vercel.app)**
 > *(No setup needed — just open and chat)*
 
 A production-quality, 4-stage AI customer support agent built for **Bloom Aesthetics Clinic**. Built with Python, Flask, and the Groq API (Llama 3.3 70B). Designed as a hiring assignment for Closira — demonstrating clean architecture, prompt engineering, and multi-stage AI workflow design.
@@ -23,7 +23,7 @@ The agent, **Aria**, handles the full customer support lifecycle in 4 automated 
 ## Try It (For Recruiters)
 
 **Option 1 — Live web app (easiest):**
-1. Open → **[https://clinic-agent.vercel.app](https://clinic-agent.vercel.app)**
+1. Open → **[https://clinic-agent-6pj3d7nqd-sohels-projects-ef12fbd0.vercel.app](https://clinic-agent-6pj3d7nqd-sohels-projects-ef12fbd0.vercel.app)**
 2. Start chatting with Aria
 3. Try these sample messages to see different behaviours:
 
