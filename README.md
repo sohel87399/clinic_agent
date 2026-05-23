@@ -1,6 +1,6 @@
 # Closira AI Agent — Bloom Aesthetics Clinic
 
-> **Live Demo → [https://clinic-agent-6pj3d7nqd-sohels-projects-ef12fbd0.vercel.app](https://clinic-agent-6pj3d7nqd-sohels-projects-ef12fbd0.vercel.app)**
+> **Live Demo → [clinic-agent-swart.vercel.app](clinic-agent-swart.vercel.app)**
 > *(No setup needed — just open and chat)*
 
 A production-quality, 4-stage AI customer support agent built for **Bloom Aesthetics Clinic**. Built with Python, Flask, and the Groq API (Llama 3.3 70B). Designed as a hiring assignment for Closira — demonstrating clean architecture, prompt engineering, and multi-stage AI workflow design.
