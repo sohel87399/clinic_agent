@@ -1,6 +1,58 @@
-# Closira AI Agent
+# Closira AI Agent — Bloom Aesthetics Clinic
 
-A production-quality, 4-stage AI customer support workflow built with Python and the Anthropic Claude API. Designed as a hiring assignment for Closira — demonstrating clean architecture, prompt engineering, and AI workflow design.
+> **Live Demo → [https://clinic-agent.vercel.app](https://clinic-agent.vercel.app)**
+> *(No setup needed — just open and chat)*
+
+A production-quality, 4-stage AI customer support agent built for **Bloom Aesthetics Clinic**. Built with Python, Flask, and the Groq API (Llama 3.3 70B). Designed as a hiring assignment for Closira — demonstrating clean architecture, prompt engineering, and multi-stage AI workflow design.
+
+---
+
+## What It Does
+
+The agent, **Aria**, handles the full customer support lifecycle in 4 automated stages:
+
+| Stage | What happens |
+|-------|-------------|
+| **1. FAQ Answering** | Answers questions strictly from the clinic's SOP — pricing, services, hours, booking |
+| **2. Lead Qualification** | Asks 3 conversational questions to score the lead (hot / warm / cold) |
+| **3. Escalation** | Detects frustration, medical questions, or out-of-scope queries and hands off to a human |
+| **4. Summary** | Generates a structured JSON summary of the session for the clinic's CRM |
+
+---
+
+## Try It (For Recruiters)
+
+**Option 1 — Live web app (easiest):**
+1. Open → **[https://clinic-agent.vercel.app](https://clinic-agent.vercel.app)**
+2. Start chatting with Aria
+3. Try these sample messages to see different behaviours:
+
+| What to type | What it demonstrates |
+|---|---|
+| `How much does Botox cost?` | FAQ answering from SOP |
+| `I want to speak to a manager` | Escalation trigger |
+| `Can I take it if I'm on blood thinners?` | Medical question → escalation |
+| `What's the weather like?` | Out-of-scope handling |
+| After a few messages, type `done` | Session summary generation |
+
+**Option 2 — Run locally:**
+```bash
+git clone https://github.com/sohel87399/clinic_agent.git
+cd clinic_agent
+pip install -r requirements.txt
+cp .env.example .env   # add your GROQ_API_KEY
+python server.py       # open http://localhost:5000
+```
+
+---
+
+## Tech Stack
+
+- **LLM:** Groq API — `llama-3.3-70b-versatile` (free tier, 14,400 req/day)
+- **Backend:** Python + Flask
+- **Frontend:** Vanilla JS + CSS (no framework)
+- **Deployment:** Vercel (serverless)
+- **Prompt design:** Single structured system prompt with output markers
 
 ---
 
@@ -8,12 +60,11 @@ A production-quality, 4-stage AI customer support workflow built with Python and
 
 ### 1. Prerequisites
 - Python 3.10+
-- An Anthropic API key ([get one here](https://console.anthropic.com/))
+- A Groq API key — free at [console.groq.com](https://console.groq.com)
 
 ### 2. Install dependencies
 
 ```bash
-cd closira-ai-agent
 pip install -r requirements.txt
 ```
 
@@ -21,11 +72,18 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
+# Edit .env and add your GROQ_API_KEY
 ```
 
 ### 4. Run
 
+**Web UI (recommended):**
+```bash
+python server.py
+# Open http://localhost:5000
+```
+
+**CLI mode:**
 ```bash
 python main.py
 ```
@@ -226,10 +284,10 @@ See [`prompt_design.md`](prompt_design.md) for full rationale on:
 
 ## Known Limitations
 
-- **In-memory only** — conversation history resets on restart; needs Redis/DB for production
-- **Self-reported confidence** — Claude's confidence scores are not perfectly calibrated
+- **Stateless on Vercel** — in-memory sessions don't persist across serverless instances; needs Redis for production scale
+- **Self-reported confidence** — the LLM's confidence scores are not perfectly calibrated
 - **English only** — no multi-language support
-- **No streaming** — responses are returned in full; streaming would improve UX
+- **No streaming** — responses returned in full; streaming would improve perceived speed
 - **Single SOP** — designed for one clinic; multi-tenant would need SOP routing
 
 ## What I'd Add With More Time
