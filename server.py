@@ -13,20 +13,16 @@ from dotenv import load_dotenv
 # Force load .env before any other imports that use the key
 load_dotenv(override=True)
 
-# Ensure GROQ key is present
+# Ensure GROQ key is present — warn but don't exit (Vercel sets it via dashboard)
 if not os.environ.get("GROQ_API_KEY"):
-    print("❌  GROQ_API_KEY not found in .env")
-    sys.exit(1)
-
-# Set it explicitly so child imports pick it up
-os.environ["GROQ_API_KEY"] = os.environ["GROQ_API_KEY"]
+    print("⚠️  GROQ_API_KEY not found — set it in Vercel environment variables")
 
 from workflow import ClosiraWorkflow
 
 app = Flask(__name__)
 CORS(app)
 
-SOP_PATH = os.path.join(os.path.dirname(__file__), "sop", "bloom_aesthetics.json")
+SOP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sop", "bloom_aesthetics.json")
 
 # In-memory session store: session_id -> ClosiraWorkflow instance
 _sessions: dict = {}

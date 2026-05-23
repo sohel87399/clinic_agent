@@ -21,11 +21,13 @@ load_dotenv(override=True)
 
 # ── Groq client ───────────────────────────────────────────────────────────────
 
-_api_key = os.environ.get("GROQ_API_KEY", "")
-if not _api_key:
-    raise RuntimeError("GROQ_API_KEY not set. Add it to your .env file.")
+def _get_client() -> Groq:
+    """Lazily create the Groq client so env vars are resolved at call time."""
+    api_key = os.environ.get("GROQ_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY not set. Add it to your .env file or Vercel environment variables.")
+    return Groq(api_key=api_key)
 
-_client = Groq(api_key=_api_key)
 MODEL = "llama-3.3-70b-versatile"
 
 # ── System prompt (also stored in prompts/system_prompt.txt) ──────────────────
@@ -139,6 +141,7 @@ def _sop_context(sop: dict) -> str:
 
 def _call_groq(system: str, conversation_history: list, user_message: str = None) -> str:
     """Make a Groq API call and return the text response."""
+    _client = _get_client()
     messages = [{"role": "system", "content": system}]
 
     for msg in conversation_history:
