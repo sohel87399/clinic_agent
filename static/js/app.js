@@ -1,37 +1,43 @@
-/* Closira AI Agent — Frontend JS */
+/* Closira AI Agent — Frontend JS (stateless version) */
 
 const API = '';  // same origin
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let sessionId = null;
+let sessionId  = null;
+let sessionState = null;   // full conversation state, sent with every message
 let isWaiting  = false;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const messagesInner   = document.getElementById('messagesInner');
-const messageInput    = document.getElementById('messageInput');
-const sendBtn         = document.getElementById('sendBtn');
-const typingIndicator = document.getElementById('typingIndicator');
-const inputArea       = document.getElementById('inputArea');
-const statusBadge     = document.getElementById('statusBadge');
-const stageBadge      = document.getElementById('stageBadge');
-const sessionIdDisplay= document.getElementById('sessionIdDisplay');
-const headerStatus    = document.getElementById('headerStatus');
-const summaryOverlay  = document.getElementById('summaryOverlay');
-const summaryBody     = document.getElementById('summaryBody');
-const newChatBtn      = document.getElementById('newChatBtn');
-const newChatSummaryBtn = document.getElementById('newChatSummaryBtn');
-const closeSummaryBtn = document.getElementById('closeSummaryBtn');
-const endSessionBtn   = document.getElementById('endSessionBtn');
+const messagesInner    = document.getElementById('messagesInner');
+const messageInput     = document.getElementById('messageInput');
+const sendBtn          = document.getElementById('sendBtn');
+const typingIndicator  = document.getElementById('typingIndicator');
+const inputArea        = document.getElementById('inputArea');
+const statusBadge      = document.getElementById('statusBadge');
+const stageBadge       = document.getElementById('stageBadge');
+const sessionIdDisplay = document.getElementById('sessionIdDisplay');
+const headerStatus     = document.getElementById('headerStatus');
+const summaryOverlay   = document.getElementById('summaryOverlay');
+const summaryBody      = document.getElementById('summaryBody');
+const newChatBtn       = document.getElementById('newChatBtn');
+const newChatSummaryBtn= document.getElementById('newChatSummaryBtn');
+const closeSummaryBtn  = document.getElementById('closeSummaryBtn');
+const endSessionBtn    = document.getElementById('endSessionBtn');
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function initSession() {
   clearMessages();
-  const res  = await fetch(`${API}/api/session/new`, { method: 'POST' });
-  const data = await res.json();
-  sessionId  = data.session_id;
-  sessionIdDisplay.textContent = sessionId.slice(0, 8);
-  appendMessage('aria', data.message, data.stage, null);
-  updateStageUI(data.stage, false);
+  try {
+    const res  = await fetch(`${API}/api/session/new`, { method: 'POST' });
+    const data = await res.json();
+    sessionId    = data.session_id;
+    sessionState = data.state;   // store initial state
+    sessionIdDisplay.textContent = sessionId.slice(0, 8);
+    appendMessage('aria', data.message, data.stage, null);
+    updateStageUI(data.stage, false);
+  } catch (err) {
+    appendMessage('aria', '⚠️ Could not connect to server. Please refresh.', 'FAQ_ANSWERING', null);
+  }
 }
 
 // ── Send message ──────────────────────────────────────────────────────────────
@@ -48,9 +54,16 @@ async function sendMessage() {
     const res  = await fetch(`${API}/api/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: sessionId, message: text }),
+      body: JSON.stringify({
+        session_id: sessionId,
+        message: text,
+        state: sessionState,   // send full state with every message
+      }),
     });
     const data = await res.json();
+
+    // Update stored state from server response
+    if (data.state) sessionState = data.state;
 
     setWaiting(false);
     appendMessage('aria', data.message, data.stage, data.metadata, data.escalated);
@@ -82,7 +95,6 @@ function appendMessage(role, text, stage = null, metadata = null, escalated = fa
   const content = document.createElement('div');
   content.className = 'msg-content';
 
-  // Stage pill (aria only)
   if (role === 'aria' && stage) {
     const pill = document.createElement('div');
     const stageKey = stage.toLowerCase().replace('_', '');
@@ -91,7 +103,6 @@ function appendMessage(role, text, stage = null, metadata = null, escalated = fa
     content.appendChild(pill);
   }
 
-  // Bubble
   const bubble = document.createElement('div');
   bubble.className = `msg-bubble ${role}`;
   if (escalated) bubble.classList.add('escalated');
@@ -99,7 +110,6 @@ function appendMessage(role, text, stage = null, metadata = null, escalated = fa
   bubble.textContent = text;
   content.appendChild(bubble);
 
-  // Confidence bar (aria FAQ only)
   if (role === 'aria' && metadata && metadata.confidence !== undefined) {
     const conf = metadata.confidence;
     const bar  = document.createElement('div');
@@ -112,7 +122,6 @@ function appendMessage(role, text, stage = null, metadata = null, escalated = fa
     content.appendChild(bar);
   }
 
-  // Timestamp
   const time = document.createElement('div');
   time.className = 'msg-time';
   time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -170,7 +179,6 @@ function updateStageUI(stage, escalated) {
     headerStatus.textContent = `Online · ${stageMap[stage] || stage} Stage`;
   }
 
-  // System message on stage transition
   if (stage === 'LEAD_QUALIFICATION') {
     appendSystemMsg('Moving to lead qualification');
   } else if (stage === 'SUMMARY' || stage === 'ENDED') {
@@ -201,12 +209,10 @@ function disableInput(reason) {
 function showSummary(summary) {
   summaryBody.innerHTML = '';
 
-  // Customer intent
   if (summary.customer_intent) {
     summaryBody.appendChild(summaryCard('Customer Intent', summary.customer_intent));
   }
 
-  // Details collected
   if (summary.details_collected) {
     const d = summary.details_collected;
     const rows = [
@@ -231,7 +237,6 @@ function showSummary(summary) {
     }
   }
 
-  // Lead score
   if (summary.details_collected?.booking_intent || summary.lead_score) {
     const score = summary.lead_score || deriveScore(summary);
     if (score) {
@@ -246,7 +251,6 @@ function showSummary(summary) {
     }
   }
 
-  // SOP gaps
   if (summary.sop_gaps && summary.sop_gaps.length > 0) {
     const card = document.createElement('div');
     card.className = 'summary-card';
@@ -257,7 +261,6 @@ function showSummary(summary) {
     summaryBody.appendChild(card);
   }
 
-  // Escalation
   if (summary.escalated) {
     const card = document.createElement('div');
     card.className = 'summary-card';
@@ -268,7 +271,6 @@ function showSummary(summary) {
     summaryBody.appendChild(card);
   }
 
-  // Recommended action
   if (summary.recommended_next_action) {
     const card = document.createElement('div');
     card.className = 'next-action-card';
@@ -309,6 +311,7 @@ function clearMessages() {
   inputArea.style.opacity = '';
   inputArea.style.pointerEvents = '';
   messageInput.placeholder = 'Type your message...';
+  sessionState = null;
   updateStageUI('FAQ_ANSWERING', false);
 }
 
@@ -355,7 +358,11 @@ endSessionBtn.addEventListener('click', async () => {
   if (!sessionId || isWaiting) return;
   setWaiting(true);
   try {
-    const res  = await fetch(`${API}/api/session/${sessionId}/end`, { method: 'POST' });
+    const res  = await fetch(`${API}/api/session/${sessionId}/end`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: sessionState }),
+    });
     const data = await res.json();
     setWaiting(false);
     appendMessage('aria', data.message, 'ENDED', null);
