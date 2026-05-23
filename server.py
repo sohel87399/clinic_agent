@@ -22,7 +22,14 @@ from workflow import ClosiraWorkflow
 app = Flask(__name__)
 CORS(app)
 
-SOP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sop", "bloom_aesthetics.json")
+# Resolve SOP path relative to this file, then fall back to checking api/../sop/
+_here = os.path.dirname(os.path.abspath(__file__))
+_sop_candidates = [
+    os.path.join(_here, "sop", "bloom_aesthetics.json"),
+    os.path.join(_here, "..", "sop", "bloom_aesthetics.json"),
+    os.path.join(os.getcwd(), "sop", "bloom_aesthetics.json"),
+]
+SOP_PATH = next((p for p in _sop_candidates if os.path.exists(p)), _sop_candidates[0])
 
 # In-memory session store: session_id -> ClosiraWorkflow instance
 _sessions: dict = {}
@@ -35,6 +42,19 @@ def _get_or_create_session(session_id: str) -> ClosiraWorkflow:
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
+@app.route("/api/health", methods=["GET"])
+def health():
+    """Health check — confirms the app and env are working."""
+    key_set = bool(os.environ.get("GROQ_API_KEY"))
+    sop_exists = os.path.exists(SOP_PATH)
+    return jsonify({
+        "status": "ok",
+        "groq_key_set": key_set,
+        "sop_found": sop_exists,
+        "sop_path": SOP_PATH,
+    })
+
 
 @app.route("/")
 def index():
